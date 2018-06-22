@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+
+SMS_CODE_REDIS_EXPIRES = 600
+
+SEND_SMS_CODE_INTERVAL = 60
+
+SMS_TEMP_ID = 1
