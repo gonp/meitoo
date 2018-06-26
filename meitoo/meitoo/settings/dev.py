@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.11/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
-
+import datetime
 import os
 import sys
 
@@ -26,7 +26,7 @@ SECRET_KEY = '5$9few-dde-o=&vpx+)a6dsvd5#qb&1lv!%ndfv9jt^hx6npm@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['www.meiduo.sit','api.meiduo.site','127.0.0.1']
 
 # Application definition
 
@@ -59,7 +59,8 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = (
     '127.0.0.1:8080',
     'localhost:8080',
-    'www.meiduo.site:8080'
+    'www.meiduo.site:8080',
+    'api.meiduo.site:8000'
 )
 CORS_ALLOW_CREDENTIALS = True
 
@@ -209,8 +210,26 @@ LOGGING = {
     }
 }
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'meitoo.utils.exceptions.exception_handler'
+    # 指定异常处理的函数
+    'EXCEPTION_HANDLER': 'meitoo.utils.exceptions.exception_handler',
+    # 设置reset_framework中新增jwt认证机制
+    'DEFAULT_AUTHENTIONCATION_CLASSES':(
+        # JSONNWebTokenAuthentication 就是 安装模块中自带
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        # 原来rest框架中自带
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA':datetime.timedelta(days=1),
+    'JWT_RESPONSE_PAYLOAD_HANDLER':'users.utils.jwt_response_payload_handler'
 }
 
 # 重新制定Django创建中的用户认证模型类
 AUTH_USER_MODEL = 'users.User'
+
+# 重新设置用户热症模型类判断用户名和密码的方法
+AUTHENTICATION_BACKENDS =[
+    'users.utils.UsernameMobileAuthBackend'
+]

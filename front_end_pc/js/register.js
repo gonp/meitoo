@@ -1,6 +1,7 @@
 var vm = new Vue({
     el: '#app',
     data: {
+        host,
         error_name: false,
         error_password: false,
         error_check_password: false,
@@ -22,7 +23,7 @@ var vm = new Vue({
         error_image_code_message: '请填写图片验证码',
         error_name_message:'请输入5-20个字符的用户',
         error_phone_message:'您输入的手机号格式不正确',
-
+        error_sms_code_message:'请填写短信验证码'
     },
     mounted: function () {
         this.generate_image_code()
@@ -46,7 +47,7 @@ var vm = new Vue({
             // 1. 生成uuid
             this.image_code_id = this.generate_uuid()
             // 2. 更新验证码图片url
-            this.image_code_url = "http://127.0.0.1:8000/image_code/" + this.image_code_id + "/";
+            this.image_code_url = this.host+"/image_code/" + this.image_code_id + "/";
         },
         check_username: function () {
             var len = this.username.length;
@@ -56,7 +57,7 @@ var vm = new Vue({
                 this.error_name = false;
             }
             if (this.error_name == false){
-                axios.get('http://127.0.0.1:8000/username/'+this.username + '/count',{
+                axios.get(this.host+'/username/'+this.username + '/count',{
                     responseType:'json'
                 })
                     .then(response =>{
@@ -95,7 +96,7 @@ var vm = new Vue({
                 this.error_phone = true;
             }
             if (this.error_phone == false) {
-                axios.get("http://127.0.0.1:8000/mobile/"+this.mobile+'/count/',{
+                axios.get(this.host+"/mobile/"+this.mobile+'/count/',{
                     responseType:'json'
                 })
                     .then(response => {
@@ -139,7 +140,7 @@ var vm = new Vue({
                 this.sending_flag = false;
                 return
             }
-            axios.get("http://127.0.0.1:8000/sms_code/" + this.mobile + "/?image_code=" + this.image_code + "&image_code_id=" + this.image_code_id, {
+            axios.get(this.host+"/sms_code/" + this.mobile + "/?image_code=" + this.image_code + "&image_code_id=" + this.image_code_id, {
                 responseType: 'json'
             })
                 .then(response => {
@@ -185,18 +186,29 @@ var vm = new Vue({
             
             if (this.error_name == false && this.error_password == false && this.error_check_password == false && this.error_phone == false
              && this.error_sms_code==false && this.error_allow==false){
-                axios.post('http://127.0.0.1:8000/users/',{
+                axios.post(this.host+"/users/",{
                     username: this.username,
                     password: this.password,
                     password2: this.password2,
                     mobile: this.mobile,
                     sms_code: this.sms_code,
                     allow: this.allow.toString()
-                },{responseType:'json'}).then(response =>{
-
+                },{responseType:'json'})
+                    .then(response =>{
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        localStorage.username = response.data.username;
+                        localStorage.user_id = response.data.id;
+                        location.href = '/index.html';
                 })
                     .catch(error=>{
+                        if (error.response.status == 400) {
+                            this.error_sms_code_message = "短信验证码错误";
+                            this.error_sms_code = 'true'
+                        }else {
                         console.log(error.response.data)
+
+                        }
                     })
             }
         }
